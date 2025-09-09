@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ViewIcon, EditIcon, DeleteIcon } from './icons.jsx';
+import { ViewIcon, EditIcon, TrashIcon } from './icons.jsx';
 
 export default function ProductGrid({ products, onView, onEdit, onDelete }) {
   return (
@@ -20,33 +20,33 @@ export default function ProductGrid({ products, onView, onEdit, onDelete }) {
           <div className="mb-4">
             <p className="text-[11.3px] text-[#717182] leading-[1.55]">{product.description}</p>
           </div>
-          {/* Stock and price (stock right, price left, Figma order) */}
+          {/* Price and stock (price left, stock right, Figma order) */}
           <div className="flex justify-between items-center mb-4">
-            <span className="text-[11.3px] text-[#717182]">Stock: {product.stock}</span>
             <span className="text-[12.8px] font-medium text-[#030213]">${product.price}</span>
+            <span className="text-[11.3px] text-[#717182]">Stock: {product.stock}</span>
           </div>
           {/* Action buttons: View, Edit, Delete (icon only for delete) */}
-          <div className="flex gap-2 mt-auto items-center">
+          <div className="flex gap-3 mt-auto items-center justify-between">
             <button
               onClick={() => onView(product)}
-              className="inline-flex items-center border border-black/10 rounded-[6.75px] px-4 py-1.5 text-xs font-medium text-black bg-white hover:bg-gray-100 gap-1"
+              className="inline-flex items-center border border-black/10 rounded-[6.75px] px-4 py-1.5 text-xs font-medium text-black bg-white hover:bg-gray-100 gap-2 min-w-[90px] justify-center"
             >
+              <ViewIcon />
               <span>View</span>
-              <span className="ml-1"><ViewIcon /></span>
             </button>
             <button
               onClick={() => onEdit(product)}
-              className="inline-flex items-center border border-black/10 rounded-[6.75px] px-4 py-1.5 text-xs font-medium text-black bg-white hover:bg-gray-100 gap-1"
+              className="inline-flex items-center border border-black/10 rounded-[6.75px] px-4 py-1.5 text-xs font-medium text-black bg-white hover:bg-gray-100 gap-2 min-w-[90px] justify-center"
             >
+              <EditIcon />
               <span>Edit</span>
-              <span className="ml-1"><EditIcon /></span>
             </button>
             <button
               onClick={() => onDelete(product)}
               className="inline-flex items-center justify-center rounded-[6.75px] w-8 h-8 text-white bg-[#D4183D] hover:bg-red-700"
               title="Delete"
             >
-              <DeleteIcon />
+              <TrashIcon />
             </button>
           </div>
         </div>

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 export default function ProductDialog({ onClose, onSave }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [stock, setStock] = useState(0);
+  const [stock, setStock] = useState('');
   const [price, setPrice] = useState('');
 
   const handleSubmit = e => {
@@ -22,20 +22,20 @@ export default function ProductDialog({ onClose, onSave }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-black mb-1">Product Name</label>
-            <input className="w-full rounded-md border border-gray-200 bg-gray-100 px-3 py-2" value={name} onChange={e => setName(e.target.value)} required />
+            <input className="w-full rounded-md border border-gray-200 bg-gray-100 px-3 py-2" value={name} onChange={e => setName(e.target.value)} required placeholder="Enter product name" />
           </div>
           <div>
             <label className="block text-sm font-medium text-black mb-1">Description</label>
-            <textarea className="w-full rounded-md border border-gray-200 bg-gray-100 px-3 py-2" value={description} onChange={e => setDescription(e.target.value)} required />
+            <textarea className="w-full rounded-md border border-gray-200 bg-gray-100 px-3 py-2" value={description} onChange={e => setDescription(e.target.value)} required placeholder="Enter product description" />
           </div>
           <div className="flex gap-4">
             <div className="flex-1">
               <label className="block text-sm font-medium text-black mb-1">Price ($)</label>
-              <input type="text" className="w-full rounded-md border border-gray-200 bg-gray-100 px-3 py-2" value={price} onChange={e => setPrice(e.target.value)} required />
+              <input type="text" className="w-full rounded-md border border-gray-200 bg-gray-100 px-3 py-2" value={price} onChange={e => setPrice(e.target.value)} required placeholder="0.00" />
             </div>
             <div className="flex-1">
               <label className="block text-sm font-medium text-black mb-1">Stock</label>
-              <input type="text" className="w-full rounded-md border border-gray-200 bg-gray-100 px-3 py-2" value={stock} onChange={e => setStock(e.target.value)} required />
+              <input type="text" className="w-full rounded-md border border-gray-200 bg-gray-100 px-3 py-2" value={stock} onChange={e => setStock(e.target.value)} required placeholder="0" />
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-6">

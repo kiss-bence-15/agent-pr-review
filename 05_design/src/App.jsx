@@ -84,11 +84,15 @@ export default function App() {
     <div className="min-h-screen bg-white flex flex-col items-center">
       <div className="max-w-7xl w-full px-4 py-8">
         {/* Title */}
-        <h1 className="text-[1.3rem] font-normal leading-tight mb-4 text-black">Product Management</h1>
-        {/* Search/add bar */}
-        <div className="mb-6 flex flex-row items-center gap-8">
-          <SearchBar value={search} onChange={setSearch} />
-          <AddButton onClick={() => setShowAdd(true)} />
+        <h1 className="text-[1.3rem] font-normal leading-tight mb-6 text-black">Product Management</h1>
+        {/* Search/add bar aligned */}
+        <div className="mb-8 flex flex-row items-center justify-between w-full">
+          <div className="flex-1 min-w-0">
+            <SearchBar value={search} onChange={setSearch} />
+          </div>
+          <div className="ml-4 flex-shrink-0">
+            <AddButton onClick={() => setShowAdd(true)} />
+          </div>
         </div>
         {/* Product grid */}
         <ProductGrid

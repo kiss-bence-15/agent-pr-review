@@ -1,3 +1,9 @@
+// Trashcan icon for delete button (Figma style)
+export const TrashIcon = () => (
+  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 7.5v9.75A2.25 2.25 0 0 0 9 19.5h6a2.25 2.25 0 0 0 2.25-2.25V7.5m-10.5 0h10.5m-10.5 0V6.75A2.25 2.25 0 0 1 8.25 4.5h7.5a2.25 2.25 0 0 1 2.25 2.25V7.5m-10.5 0h10.5M10.5 11.25v3.75m3 0v-3.75" />
+  </svg>
+);
 // SVG icons matching Figma design
 export const ViewIcon = () => (
   <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.2" viewBox="0 0 14 14"><ellipse cx="7" cy="7" rx="5.5" ry="4.5" stroke="#000"/><circle cx="7" cy="7" r="2" stroke="#000"/></svg>
