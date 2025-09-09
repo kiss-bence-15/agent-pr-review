@@ -6,7 +6,12 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/products': 'http://localhost:8000',
+      '^/(products|cart)': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path
+      }
     },
   },
 });
