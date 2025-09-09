@@ -8,21 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
-from database import User, Product, create_tables, get_db
-
-# --- User Data ---
-class UserCreate(BaseModel):
-    name: str
-    email: str
-
-
-class UserResponse(BaseModel):
-    id: int
-    name: str
-    email: str
-
-    class Config:
-        from_attributes = True
+from database import Product, create_tables, get_db
 
 # --- Product Data ---
 class ProductCreateRequest(BaseModel):
@@ -50,7 +36,6 @@ async def lifespan(app: FastAPI):
     yield
 
 
-
 app = FastAPI(title=settings.app_name, lifespan=lifespan)
 
 # Add CORS middleware
@@ -67,27 +52,6 @@ app.add_middleware(
 async def root():
     return {"message": "Welcome to FastAPI Template"}
 
-# --- User Endpoints ---
-@app.post("/users/", response_model=UserResponse)
-async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).filter(User.email == user.email))
-    db_user = result.first()
-
-    if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-
-    db_user = User(name=user.name, email=user.email)
-    db.add(db_user)
-    await db.commit()
-    await db.refresh(db_user)
-    return db_user
-
-
-@app.get("/users/", response_model=List[UserResponse])
-async def get_users(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User))
-    users = result.scalars().all()
-    return users
 
 # --- Product Endpoints ---
 @app.get("/products/", response_model=List[ProductResponse])
@@ -108,7 +72,7 @@ async def get_product_by_id(product_id: int, db: AsyncSession = Depends(get_db))
 @app.post("/products/", response_model=ProductResponse)
 async def create_product(product: ProductCreateRequest, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Product).filter(Product.name == product.name))
-    db_product = result.first()
+    db_product = result.scalars().first()
 
     if db_product:
         raise HTTPException(status_code=400, detail="Product already registered")
@@ -126,14 +90,14 @@ async def update_product(product_id: int, product: ProductUpdateRequest, db: Asy
     if not db_product:
         raise HTTPException(status_code=404, detail="Product not registered")
 
-    if product.name:
-        db_product.name = product.name
-    if product.price:
-        db_product.price = product.price
-    if product.description:
-        db_product.description = product.description
-    if product.stock:
-        db_product.stock = product.stock
+    if product.name is not None:
+        db_product.name = product.name  # type: ignore
+    if product.price is not None:
+        db_product.price = product.price  # type: ignore
+    if product.description is not None:
+        db_product.description = product.description  # type: ignore
+    if product.stock is not None:
+        db_product.stock = product.stock  # type: ignore
 
     await db.commit()
     await db.refresh(db_product)
