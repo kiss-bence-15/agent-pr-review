@@ -24,3 +24,15 @@ export const PlusIcon = () => (
 export const SearchIcon = () => (
   <svg width="14" height="14" fill="none" stroke="#000" strokeWidth="1.2" viewBox="0 0 14 14"><circle cx="6" cy="6" r="4.5" stroke="#000"/><line x1="11" y1="11" x2="8.5" y2="8.5" stroke="#000"/></svg>
 );
+
+export const MinusIcon = () => (
+  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <line x1="5" y1="12" x2="19" y2="12" />
+  </svg>
+);
+
+export const CartIcon = () => (
+  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+  </svg>
+);

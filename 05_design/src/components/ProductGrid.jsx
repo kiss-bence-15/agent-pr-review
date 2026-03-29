@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { ViewIcon, EditIcon, TrashIcon } from './icons.jsx';
+import { ViewIcon, EditIcon, TrashIcon, CartIcon } from './icons.jsx';
 
-export default function ProductGrid({ products, onView, onEdit, onDelete }) {
+export default function ProductGrid({ products, onView, onEdit, onDelete, onAddToCart }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       {products.map(product => (
@@ -27,27 +27,39 @@ export default function ProductGrid({ products, onView, onEdit, onDelete }) {
           </div>
           {/* Action buttons: View, Edit, Delete (icon only for delete) */}
           <div className="flex gap-3 mt-auto items-center justify-between">
-            <button
-              onClick={() => onView(product)}
-              className="inline-flex items-center border border-black/10 rounded-[6.75px] px-4 py-1.5 text-xs font-medium text-black bg-white hover:bg-gray-100 gap-2 min-w-[90px] justify-center"
-            >
-              <ViewIcon />
-              <span>View</span>
-            </button>
-            <button
-              onClick={() => onEdit(product)}
-              className="inline-flex items-center border border-black/10 rounded-[6.75px] px-4 py-1.5 text-xs font-medium text-black bg-white hover:bg-gray-100 gap-2 min-w-[90px] justify-center"
-            >
-              <EditIcon />
-              <span>Edit</span>
-            </button>
-            <button
-              onClick={() => onDelete(product)}
-              className="inline-flex items-center justify-center rounded-[6.75px] w-8 h-8 text-white bg-[#D4183D] hover:bg-red-700"
-              title="Delete"
-            >
-              <TrashIcon />
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => onView(product)}
+                className="inline-flex items-center border border-black/10 rounded-[6.75px] px-4 py-1.5 text-xs font-medium text-black bg-white hover:bg-gray-100 gap-2 justify-center"
+              >
+                <ViewIcon />
+                <span>View</span>
+              </button>
+              <button
+                onClick={() => onEdit(product)}
+                className="inline-flex items-center border border-black/10 rounded-[6.75px] px-4 py-1.5 text-xs font-medium text-black bg-white hover:bg-gray-100 gap-2 justify-center"
+              >
+                <EditIcon />
+                <span>Edit</span>
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => onAddToCart(product)}
+                disabled={product.stock === 0}
+                className="inline-flex items-center justify-center rounded-[6.75px] w-8 h-8 text-white bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                title={product.stock === 0 ? "Out of stock" : "Add to cart"}
+              >
+                <CartIcon />
+              </button>
+              <button
+                onClick={() => onDelete(product)}
+                className="inline-flex items-center justify-center rounded-[6.75px] w-8 h-8 text-white bg-[#D4183D] hover:bg-red-700"
+                title="Delete"
+              >
+                <TrashIcon />
+              </button>
+            </div>
           </div>
         </div>
       ))}
