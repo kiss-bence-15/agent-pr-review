@@ -15,7 +15,8 @@ export default function CartItem({ item, onUpdateQuantity }) {
         <div className="flex justify-between items-center mt-1">
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => onUpdateQuantity(item.quantity - 1)}
+              onClick={() => onUpdateQuantity(Math.max(0, item.quantity - 1))}
+              disabled={item.quantity <= 0}
               className="text-gray-500 hover:text-gray-700 p-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <MinusIcon className="w-4 h-4" />

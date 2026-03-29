@@ -62,6 +62,18 @@ export default function App() {
     initializeCart();
   }, []);
 
+  const refreshCart = async () => {
+    try {
+      const res = await fetch('/cart', { headers: { Accept: 'application/json' } });
+      if (!res.ok) return;
+      const cartData = await res.json();
+      setCart(cartData);
+      setCartItems(cartData.items || []);
+    } catch (e) {
+      // ignore
+    }
+  };
+
   const handleAdd = async (product) => {
     try {
       const res = await fetch('/products', {
@@ -105,6 +117,8 @@ export default function App() {
       const updated = await res.json();
       setProducts(products.map(p => p.id === updated.id ? updated : p));
       setShowEdit(false);
+      // Refresh cart to reflect updated product prices
+      await refreshCart();
     } catch (e) {
       alert('Failed to update product.');
     }
@@ -112,7 +126,11 @@ export default function App() {
 
   const handleDelete = (id) => {
     fetch(`/products/${id}`, { method: 'DELETE' })
-      .then(() => setProducts(products.filter(p => p.id !== id)));
+      .then(async () => {
+        setProducts(products.filter(p => p.id !== id));
+        // Refresh cart in case deleted product was in cart
+        await refreshCart();
+      });
     setShowDelete(false);
   };
 
@@ -145,13 +163,15 @@ export default function App() {
       }
 
       const updatedCart = await res.json();
-      setCart(updatedCart);
-      setCartItems(updatedCart.items || []);
+      // Prefer to refresh cart from server to get canonical state
+      await refreshCart();
       
       // Update product stock in the UI
-      setProducts(products.map(p => 
-        p.id === product.id ? { ...p, stock: p.stock - 1 } : p
-      ));
+      setProducts(prev =>
+        prev.map(p =>
+          p.id === product.id ? { ...p, stock: Math.max(0, p.stock - 1) } : p
+        )
+      );
     } catch (error) {
       alert(error.message || 'Failed to add item to cart');
     }
@@ -179,16 +199,17 @@ export default function App() {
           throw new Error(error.detail || 'Failed to remove item from cart');
         }
 
-        const updatedCart = await res.json();
-        setCart(updatedCart);
-        setCartItems(updatedCart.items || []);
+        // Refresh cart from server to ensure UI matches backend
+        await refreshCart();
 
         // Update product stock in the UI after successful removal
-        setProducts(products.map(p => 
-          p.id === cartItem.product_id 
-            ? { ...p, stock: p.stock + cartItem.quantity } 
-            : p
-        ));
+        setProducts(prev =>
+          prev.map(p =>
+            p.id === cartItem.product_id
+              ? { ...p, stock: p.stock + cartItem.quantity }
+              : p
+          )
+        );
         return;
       }
 
@@ -228,21 +249,19 @@ export default function App() {
         }
       }
 
-      const updatedCart = await res.json();
-      
-      // Update local state with the server response
-      setCart(updatedCart);
-      setCartItems(updatedCart.items || []);
+      // Prefer to refresh cart to get canonical state and updated product info
+      await refreshCart();
 
-      // Update product stock in the UI based on the server response
-      const updatedItem = updatedCart.items.find(item => item.id === itemId);
-      if (updatedItem) {
-        const actualQuantityDiff = updatedItem.quantity - cartItem.quantity;
-        setProducts(products.map(p => 
-          p.id === cartItem.product_id 
-            ? { ...p, stock: p.stock - actualQuantityDiff } 
-            : p
-        ));
+      // Adjust product stock locally based on the requested change
+      const actualQuantityDiff = newQuantity - cartItem.quantity;
+      if (actualQuantityDiff !== 0) {
+        setProducts(prev =>
+          prev.map(p =>
+            p.id === cartItem.product_id
+              ? { ...p, stock: Math.max(0, p.stock - actualQuantityDiff) }
+              : p
+          )
+        );
       }
     } catch (error) {
       alert(error.message || 'Failed to update cart item');

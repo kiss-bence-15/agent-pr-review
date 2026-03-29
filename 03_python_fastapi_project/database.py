@@ -1,8 +1,9 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy import Integer, String, Numeric, ForeignKey, UniqueConstraint, CheckConstraint, Index
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from typing import List
+from decimal import Decimal
 
 from config import settings
 
@@ -19,7 +20,7 @@ class Product(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String, unique=True, index=True)
-    price: Mapped[float] = mapped_column(Float, nullable=False)
+    price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     description: Mapped[str | None] = mapped_column(String, nullable=True)
     stock: Mapped[int] = mapped_column(Integer, default=0)
     cart_items: Mapped[List["CartItem"]] = relationship("CartItem", back_populates="product")
@@ -32,6 +33,12 @@ class Cart(Base):
 
 class CartItem(Base):
     __tablename__ = "cart_items"
+    __table_args__ = (
+        UniqueConstraint("cart_id", "product_id", name="uq_cartitem_cart_product"),
+        CheckConstraint("quantity > 0", name="ck_cartitem_quantity_positive"),
+        Index("ix_cart_items_cart_id", "cart_id"),
+        Index("ix_cart_items_product_id", "product_id"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     cart_id: Mapped[int] = mapped_column(ForeignKey("carts.id"), nullable=False)

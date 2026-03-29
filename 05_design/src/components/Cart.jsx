@@ -18,7 +18,7 @@ export default function Cart({ items = [], onUpdateItem }) {
           <CartItem 
             key={item.id} 
             item={item} 
-            onUpdateQuantity={(quantity) => onUpdateItem(item.id, quantity)}
+            onUpdateQuantity={(quantity) => onUpdateItem(item.id, Math.max(0, quantity))}
           />
         ))}
       </div>

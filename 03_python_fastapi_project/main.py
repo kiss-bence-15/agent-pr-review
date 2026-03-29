@@ -4,7 +4,8 @@ from typing import List
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import select
+from pydantic import Field
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -34,9 +35,14 @@ class ProductResponse(BaseModel):
     stock: int
 
 # --- Cart Data ---
-class CartItemRequest(BaseModel):
+class CartItemCreateRequest(BaseModel):
     product_id: int
-    quantity: int
+    quantity: int = Field(..., gt=0)
+
+
+class CartItemUpdateRequest(BaseModel):
+    product_id: int
+    quantity: int = Field(..., ge=0)
 
 class CartItemResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -157,7 +163,7 @@ async def get_cart(db: AsyncSession = Depends(get_db)):
     return cart
 
 @app.post("/cart/items", response_model=CartResponse)
-async def add_to_cart(item: CartItemRequest, db: AsyncSession = Depends(get_db)):
+async def add_to_cart(item: CartItemCreateRequest, db: AsyncSession = Depends(get_db)):
     try:
         # Get or create the cart with explicit loading of relationships
         result = await db.execute(
@@ -175,6 +181,8 @@ async def add_to_cart(item: CartItemRequest, db: AsyncSession = Depends(get_db))
             await db.refresh(cart)
 
         # Check if product exists and has enough stock
+        if item.quantity <= 0:
+            raise HTTPException(status_code=400, detail="Quantity must be greater than 0")
         product_result = await db.execute(
             select(Product).filter(Product.id == item.product_id)
         )
@@ -195,9 +203,11 @@ async def add_to_cart(item: CartItemRequest, db: AsyncSession = Depends(get_db))
         existing_item = existing_item_result.scalar_one_or_none()
 
         if existing_item:
-            if product.stock < (existing_item.quantity + item.quantity):
+            if item.quantity <= 0:
+                raise HTTPException(status_code=400, detail="Quantity must be greater than 0")
+            if product.stock < item.quantity:
                 raise HTTPException(status_code=400, detail="Not enough stock available")
-            existing_item.quantity = existing_item.quantity + item.quantity
+            existing_item.quantity += item.quantity
         else:
             cart_item = CartItem(
                 cart_id=cart.id,
@@ -206,8 +216,15 @@ async def add_to_cart(item: CartItemRequest, db: AsyncSession = Depends(get_db))
             )
             db.add(cart_item)
 
-        # Update product stock
-        product.stock = product.stock - item.quantity
+        # Atomically decrement stock, fail if not enough
+        result = await db.execute(
+            update(Product)
+            .where(Product.id == item.product_id, Product.stock >= item.quantity)
+            .values(stock=Product.stock - item.quantity)
+            .execution_options(synchronize_session=False)
+        )
+        if result.rowcount != 1:
+            raise HTTPException(status_code=400, detail="Not enough stock available")
         
         # Commit all changes in one transaction
         await db.commit()
@@ -225,9 +242,12 @@ async def add_to_cart(item: CartItemRequest, db: AsyncSession = Depends(get_db))
         updated_cart = result.scalar_one()
         return updated_cart
 
+    except HTTPException:
+        await db.rollback()
+        raise
     except Exception as e:
         await db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 @app.delete("/cart/items/{item_id}", response_model=CartResponse)
 async def remove_from_cart(item_id: int, db: AsyncSession = Depends(get_db)):
@@ -256,13 +276,18 @@ async def remove_from_cart(item_id: int, db: AsyncSession = Depends(get_db)):
 
     await db.delete(cart_item)
     await db.commit()
-    await db.refresh(cart)
-    return cart
+    result = await db.execute(
+        select(Cart)
+        .options(selectinload(Cart.items).selectinload(CartItem.product))
+        .filter(Cart.id == cart.id)
+    )
+    updated_cart = result.scalar_one()
+    return updated_cart
 
 @app.put("/cart/items/{item_id}", response_model=CartResponse)
 async def update_cart_item(
     item_id: int, 
-    item: CartItemRequest, 
+    item: CartItemUpdateRequest, 
     db: AsyncSession = Depends(get_db)
 ):
     try:
@@ -298,6 +323,21 @@ async def update_cart_item(
         # Validate the product_id matches
         if item.product_id != cart_item.product_id:
             raise HTTPException(status_code=400, detail="Cannot change product_id of cart item")
+
+        # Validate target quantity
+        if item.quantity < 0:
+            raise HTTPException(status_code=400, detail="Quantity cannot be negative")
+        if item.quantity == 0:
+            # Restore stock and remove the item
+            product.stock = product.stock + cart_item.quantity
+            await db.delete(cart_item)
+            await db.commit()
+            result = await db.execute(
+                select(Cart)
+                .options(selectinload(Cart.items).selectinload(CartItem.product))
+                .filter(Cart.id == cart.id)
+            )
+            return result.scalar_one()
 
         # Calculate stock change
         stock_change = item.quantity - cart_item.quantity
